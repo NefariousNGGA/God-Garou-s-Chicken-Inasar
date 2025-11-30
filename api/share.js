@@ -1,4 +1,5 @@
-// Facebook Sharing API
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -16,20 +17,17 @@ export default async function handler(req, res) {
         if (!isValid) {
             return res.status(401).json({ 
                 success: false, 
-                error: 'Session expired or invalid' 
+                error: 'Facebook session expired. Please refresh your appstate.' 
             });
         }
 
         let result;
-        switch (type) {
-            case 'timeline':
-                result = await shareToTimeline(appstate, message, link, privacy);
-                break;
-            case 'story':
-                result = await shareToStory(appstate, message, link);
-                break;
-            default:
-                return res.status(400).json({ error: 'Invalid share type' });
+        if (type === 'timeline') {
+            result = await shareToTimelineReal(appstate, message, link, privacy);
+        } else if (type === 'story') {
+            result = await shareToStoryReal(appstate, message, link);
+        } else {
+            return res.status(400).json({ error: 'Invalid share type' });
         }
 
         return res.status(200).json(result);
@@ -42,54 +40,104 @@ export default async function handler(req, res) {
     }
 }
 
-async function shareToTimeline(appstate, message, link, privacy) {
-    const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+async function shareToTimelineReal(appstate, message, link, privacy) {
+    const cookieString = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+    const xsToken = appstate.find(c => c.name === 'xs').value;
 
     try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        return {
-            success: true,
-            type: 'timeline',
-            message: `Shared to timeline: ${message.substring(0, 50)}...`,
-            postId: 'simulated_' + Date.now()
+        // Method 1: Try Graph API first
+        const postData = {
+            message: message,
+            link: link,
+            privacy: { value: privacy }
         };
+
+        const response = await fetch('https://graph.facebook.com/me/feed', {
+            method: 'POST',
+            headers: {
+                'Cookie': cookieString,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+                'Content-Type': 'application/json',
+                'Authorization': `OAuth ${xsToken}`
+            },
+            body: JSON.stringify(postData),
+            timeout: 15000
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                success: true,
+                type: 'timeline',
+                message: `Shared to timeline successfully`,
+                postId: data.id
+            };
+        }
+
+        // If Graph API fails, throw error
+        throw new Error(`Facebook API returned ${response.status}`);
+
     } catch (error) {
         throw new Error(`Timeline share failed: ${error.message}`);
     }
 }
 
-async function shareToStory(appstate, message, link) {
+async function shareToStoryReal(appstate, message, link) {
+    const cookieString = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+
     try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        return {
-            success: true,
-            type: 'story',
-            message: `Posted to story: ${message.substring(0, 50)}...`,
-            storyId: 'simulated_' + Date.now()
+        // Story sharing via Graph API
+        const postData = {
+            message: message,
+            link: link,
+            place_attachment_setting: 'CHECKIN'
         };
+
+        const response = await fetch('https://graph.facebook.com/me/stories', {
+            method: 'POST',
+            headers: {
+                'Cookie': cookieString,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData),
+            timeout: 15000
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                success: true,
+                type: 'story',
+                message: `Posted to story successfully`,
+                storyId: data.id
+            };
+        }
+
+        throw new Error(`Facebook API returned ${response.status}`);
+
     } catch (error) {
         throw new Error(`Story share failed: ${error.message}`);
     }
 }
 
 async function testSessionValidity(appstate) {
-    const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+    const cookieString = appstate.map(c => `${c.name}=${c.value}`).join('; ');
 
     try {
         const response = await fetch('https://graph.facebook.com/me?fields=id', {
             headers: { 
-                'Cookie': cookies,
+                'Cookie': cookieString,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
                 'Accept': 'application/json'
-            }
+            },
+            timeout: 10000
         });
         
         if (!response.ok) return false;
         
-        const contentType = response.headers.get('content-type');
-        return contentType && contentType.includes('application/json');
+        const data = await response.json();
+        return !data.error;
     } catch {
         return false;
     }
