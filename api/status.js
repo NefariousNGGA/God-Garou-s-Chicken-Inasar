@@ -1,4 +1,5 @@
-// Session Status Check
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -11,12 +12,14 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'AppState required' });
         }
 
-        const isValid = await testSessionValidity(appstate);
+        const isValid = await testSessionValidityReal(appstate);
+        const userInfo = isValid ? await getUserInfo(appstate) : null;
 
         return res.status(200).json({
             valid: isValid,
+            user: userInfo,
             timestamp: new Date().toISOString(),
-            message: isValid ? 'Session is valid' : 'Session expired'
+            message: isValid ? 'Session is active' : 'Session expired or invalid'
         });
 
     } catch (error) {
@@ -27,28 +30,45 @@ export default async function handler(req, res) {
     }
 }
 
-async function testSessionValidity(appstate) {
-    const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+async function testSessionValidityReal(appstate) {
+    const cookieString = appstate.map(c => `${c.name}=${c.value}`).join('; ');
 
     try {
-        const response = await fetch('https://graph.facebook.com/me?fields=id', {
+        const response = await fetch('https://graph.facebook.com/me?fields=id,name', {
             headers: { 
-                'Cookie': cookies,
-                'Accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
+                'Cookie': cookieString,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+                'Accept': 'application/json'
+            },
+            timeout: 10000
         });
         
         if (!response.ok) return false;
         
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            return false;
-        }
-        
         const data = await response.json();
-        return !data.error; // Valid if no error in response
+        return !data.error && data.id;
     } catch {
         return false;
+    }
+}
+
+async function getUserInfo(appstate) {
+    const cookieString = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+
+    try {
+        const response = await fetch('https://graph.facebook.com/me?fields=id,name,email', {
+            headers: { 
+                'Cookie': cookieString,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            return await response.json();
+        }
+        return null;
+    } catch {
+        return null;
     }
 }
