@@ -8,6 +8,7 @@
     --matrix-green: #00ff00;
     --white: #ffffff;
     --gray: #888888;
+    --danger-red: #ff0000;
 }
 
 /* RESET & BASE */
@@ -35,6 +36,9 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .hamburger {
@@ -109,6 +113,7 @@ body {
     border-radius: 6px;
     text-align: left;
     transition: all 0.3s ease;
+    font-family: 'Courier New', monospace;
 }
 
 .nav-item:hover,
@@ -135,6 +140,137 @@ body {
     display: block;
 }
 
+/* PANEL CONTENT STYLES */
+.panel-content {
+    padding: 1rem;
+}
+
+.panel-content h2 {
+    color: var(--fiery-red);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--fiery-red);
+    padding-bottom: 0.5rem;
+    text-shadow: 0 0 5px var(--glowing-red);
+}
+
+.input-group {
+    margin-bottom: 1rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--white);
+    font-weight: bold;
+}
+
+.input-group input,
+.input-group textarea,
+.input-group select {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--charcoal-light);
+    border: 1px solid var(--gray);
+    border-radius: 4px;
+    color: var(--white);
+    font-family: 'Courier New', monospace;
+}
+
+.input-group input:focus,
+.input-group textarea:focus,
+.input-group select:focus {
+    border-color: var(--fiery-red);
+    outline: none;
+    box-shadow: 0 0 5px var(--glowing-red);
+}
+
+.input-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.destinations-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn-primary {
+    background: var(--fiery-red);
+    color: var(--white);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-family: 'Courier New', monospace;
+}
+
+.btn-primary:hover {
+    background: var(--glowing-red);
+    box-shadow: 0 0 15px var(--glowing-red);
+}
+
+.btn-danger {
+    background: var(--danger-red);
+    color: var(--white);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-family: 'Courier New', monospace;
+}
+
+.btn-danger:hover {
+    background: #cc0000;
+    box-shadow: 0 0 15px var(--danger-red);
+}
+
+.status-box {
+    background: var(--charcoal-light);
+    border: 1px solid var(--fiery-red);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.status-line {
+    margin-bottom: 0.5rem;
+    font-family: 'Courier New', monospace;
+}
+
+/* CHECKBOX STYLES */
+.input-group label input[type="checkbox"] {
+    margin-right: 0.5rem;
+    transform: scale(1.2);
+}
+
+/* GROUPS LIST */
+.groups-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.group-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--gray);
+}
+
+.group-item:last-child {
+    border-bottom: none;
+}
+
 /* LOGS CONTAINER */
 .logs-container {
     background: var(--charcoal-dark);
@@ -148,6 +284,7 @@ body {
     color: var(--matrix-green);
     font-weight: bold;
     border-bottom: 1px solid var(--fiery-red);
+    text-shadow: 0 0 5px var(--matrix-green);
 }
 
 .logs-content {
@@ -156,11 +293,13 @@ body {
     overflow-y: auto;
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
+    background: var(--charcoal-dark);
 }
 
 .log-entry {
     color: var(--matrix-green);
     margin-bottom: 0.25rem;
+    text-shadow: 0 0 2px var(--matrix-green);
 }
 
 /* RESPONSIVE DESIGN */
@@ -176,6 +315,14 @@ body {
     
     .main-content {
         padding: 0.5rem;
+    }
+    
+    .destinations-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -214,4 +361,33 @@ body {
 
 .overlay.active {
     display: block;
+}
+
+/* HISTORY LIST */
+.history-list {
+    margin-top: 1rem;
+}
+
+.history-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--gray);
+    font-family: 'Courier New', monospace;
+}
+
+/* SCROLLBAR STYLING */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--charcoal-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--fiery-red);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--glowing-red);
 }
