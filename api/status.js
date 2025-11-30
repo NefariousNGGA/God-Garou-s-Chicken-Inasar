@@ -15,7 +15,8 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
             valid: isValid,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            message: isValid ? 'Session is valid' : 'Session expired'
         });
 
     } catch (error) {
@@ -27,14 +28,26 @@ export default async function handler(req, res) {
 }
 
 async function testSessionValidity(appstate) {
-    // Test if session is still valid
     const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
-    
+
     try {
         const response = await fetch('https://graph.facebook.com/me?fields=id', {
-            headers: { 'Cookie': cookies }
+            headers: { 
+                'Cookie': cookies,
+                'Accept': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
         });
-        return response.ok;
+        
+        if (!response.ok) return false;
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            return false;
+        }
+        
+        const data = await response.json();
+        return !data.error; // Valid if no error in response
     } catch {
         return false;
     }
