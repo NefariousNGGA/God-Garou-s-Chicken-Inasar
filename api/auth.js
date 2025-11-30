@@ -1,4 +1,5 @@
-// AppState Validation API
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -21,12 +22,14 @@ export default async function handler(req, res) {
             });
         }
 
-        const isValid = await testFacebookSession(appstate);
+        // Test with REAL Facebook Graph API
+        const isValid = await testFacebookSessionReal(appstate);
 
         return res.status(200).json({
             success: isValid,
             userId: c_user.value,
-            expires: getExpiryDate(xs)
+            expires: getExpiryDate(xs),
+            message: isValid ? 'Session is valid' : 'Session invalid or blocked'
         });
 
     } catch (error) {
@@ -37,29 +40,30 @@ export default async function handler(req, res) {
     }
 }
 
-async function testFacebookSession(appstate) {
-    const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+async function testFacebookSessionReal(appstate) {
+    const cookieString = appstate.map(c => `${c.name}=${c.value}`).join('; ');
 
     try {
         const response = await fetch('https://graph.facebook.com/me?fields=id,name', {
             headers: {
-                'Cookie': cookies,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Accept': 'application/json'
-            }
+                'Cookie': cookieString,
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
+                'Accept': 'application/json',
+                'Authorization': 'OAuth ' + appstate.find(c => c.name === 'xs').value
+            },
+            timeout: 10000
         });
 
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            return !data.error; // Valid if no error field
-        } else {
-            const text = await response.text();
-            console.log('Facebook returned HTML:', text.substring(0, 200));
+        if (!response.ok) {
+            console.log('Facebook API returned status:', response.status);
             return false;
         }
+
+        const data = await response.json();
+        return !data.error && data.id;
+
     } catch (error) {
-        console.log('Session test error:', error.message);
+        console.log('Facebook API error:', error.message);
         return false;
     }
 }
