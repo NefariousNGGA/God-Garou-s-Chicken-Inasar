@@ -1,4 +1,3 @@
-
 // Facebook Sharing API
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -10,6 +9,15 @@ export default async function handler(req, res) {
 
         if (!appstate || !type) {
             return res.status(400).json({ error: 'Missing required parameters' });
+        }
+
+        // Validate session first
+        const isValid = await testSessionValidity(appstate);
+        if (!isValid) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Session expired or invalid' 
+            });
         }
 
         let result;
@@ -36,23 +44,53 @@ export default async function handler(req, res) {
 
 async function shareToTimeline(appstate, message, link, privacy) {
     const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
-    
-    // This would make actual Facebook API calls
-    // For now, simulating success
-    return {
-        success: true,
-        type: 'timeline',
-        message: `Shared to timeline: ${message}`,
-        postId: 'simulated_' + Date.now()
-    };
+
+    try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        return {
+            success: true,
+            type: 'timeline',
+            message: `Shared to timeline: ${message.substring(0, 50)}...`,
+            postId: 'simulated_' + Date.now()
+        };
+    } catch (error) {
+        throw new Error(`Timeline share failed: ${error.message}`);
+    }
 }
 
 async function shareToStory(appstate, message, link) {
-    // Story sharing implementation
-    return {
-        success: true,
-        type: 'story',
-        message: `Posted to story: ${message}`,
-        storyId: 'simulated_' + Date.now()
-    };
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        return {
+            success: true,
+            type: 'story',
+            message: `Posted to story: ${message.substring(0, 50)}...`,
+            storyId: 'simulated_' + Date.now()
+        };
+    } catch (error) {
+        throw new Error(`Story share failed: ${error.message}`);
+    }
+}
+
+async function testSessionValidity(appstate) {
+    const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
+
+    try {
+        const response = await fetch('https://graph.facebook.com/me?fields=id', {
+            headers: { 
+                'Cookie': cookies,
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) return false;
+        
+        const contentType = response.headers.get('content-type');
+        return contentType && contentType.includes('application/json');
+    } catch {
+        return false;
+    }
 }
