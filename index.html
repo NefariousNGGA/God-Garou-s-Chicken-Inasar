@@ -1,1 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>God Garou's Chicken Inasar</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- Header with Hamburger -->
+    <header class="header">
+        <button class="hamburger" id="hamburger">☰</button>
+        <h1>God Garou's Chicken Inasar</h1>
+    </header>
 
+    <!-- Side Navigation -->
+    <nav class="side-nav" id="sideNav">
+        <div class="nav-content">
+            <button class="nav-close" id="navClose">✕</button>
+            <div class="nav-items">
+                <button class="nav-item active" data-panel="share">Share Controls</button>
+                <button class="nav-item" data-panel="sessions">Sessions</button>
+                <button class="nav-item" data-panel="settings">Settings</button>
+                <button class="nav-item" data-panel="groups">Groups</button>
+                <button class="nav-item" data-panel="schedule">Schedule</button>
+                <button class="nav-item" data-panel="history">History</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Share Controls Panel (Default) -->
+        <div class="panel active" id="share-panel">
+            <!-- Share controls will go here -->
+        </div>
+
+        <!-- Sessions Panel -->
+        <div class="panel" id="sessions-panel">
+            <!-- AppState input will go here -->
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="panel" id="settings-panel">
+            <!-- Settings controls will go here -->
+        </div>
+
+        <!-- Groups Panel -->
+        <div class="panel" id="groups-panel">
+            <!-- Groups list will go here -->
+        </div>
+
+        <!-- Schedule Panel -->
+        <div class="panel" id="schedule-panel">
+            <!-- Scheduling will go here -->
+        </div>
+
+        <!-- History Panel -->
+        <div class="panel" id="history-panel">
+            <!-- History log will go here -->
+        </div>
+    </main>
+
+    <!-- Real-time Logs (Always at bottom) -->
+    <div class="logs-container">
+        <div class="logs-header">Real-time Logs</div>
+        <div class="logs-content" id="logsContent">
+            <div class="log-entry">> System initialized</div>
+            <div class="log-entry">> Ready for appstate</div>
+        </div>
+    </div>
+
+    <script src="scripts/ui.js"></script>
+    <script src="scripts/fb-api.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
