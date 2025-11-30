@@ -11,7 +11,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Invalid appstate format' });
         }
 
-        // Find required cookies
         const c_user = appstate.find(c => c.name === 'c_user');
         const xs = appstate.find(c => c.name === 'xs');
 
@@ -22,7 +21,6 @@ export default async function handler(req, res) {
             });
         }
 
-        // Basic validation - in real implementation you'd make a test API call
         const isValid = await testFacebookSession(appstate);
 
         return res.status(200).json({
@@ -40,20 +38,28 @@ export default async function handler(req, res) {
 }
 
 async function testFacebookSession(appstate) {
-    // Convert appstate to cookies string
     const cookies = appstate.map(c => `${c.name}=${c.value}`).join('; ');
-    
+
     try {
-        // Make a lightweight API call to test session
         const response = await fetch('https://graph.facebook.com/me?fields=id,name', {
             headers: {
                 'Cookie': cookies,
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json'
             }
         });
 
-        return response.ok;
-    } catch {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            return !data.error; // Valid if no error field
+        } else {
+            const text = await response.text();
+            console.log('Facebook returned HTML:', text.substring(0, 200));
+            return false;
+        }
+    } catch (error) {
+        console.log('Session test error:', error.message);
         return false;
     }
 }
